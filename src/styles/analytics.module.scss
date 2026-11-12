@@ -4,15 +4,15 @@
   margin-bottom: 24px;
 
   h2 {
-    font-size: 1.75rem;
-    font-weight: 700;
+    font-size: 1.5rem;
+    font-weight: 600;
     letter-spacing: -0.02em;
     margin-bottom: 4px;
   }
 
   p {
     color: $color-text-secondary;
-    font-size: 0.9rem;
+    font-size: 0.875rem;
   }
 }
 
@@ -20,13 +20,13 @@
   text-align: center;
   padding: 60px 20px;
   color: $color-text-muted;
-  font-size: 0.9rem;
+  font-size: 0.875rem;
 }
 
 .rateCards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 14px;
+  gap: 16px;
   margin-bottom: 24px;
 }
 
@@ -35,33 +35,30 @@
   border: 1px solid $color-border;
   border-radius: $radius-lg;
   padding: 20px;
-  text-align: center;
-  transition: all $transition-fast;
+  transition: border-color $transition-fast;
 
   &:hover {
     border-color: $color-border-light;
-    transform: translateY(-1px);
   }
 }
 
 .rateValue {
   font-size: 2rem;
-  font-weight: 700;
+  font-weight: 500;
   letter-spacing: -0.02em;
   line-height: 1;
+  font-variant-numeric: tabular-nums;
 }
 
 .rateLabel {
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: $color-text-secondary;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: $color-text-muted;
   margin-top: 8px;
 }
 
 .rateSub {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   color: $color-text-muted;
   margin-top: 4px;
 }
@@ -83,8 +80,9 @@
   padding: 20px;
 
   h3 {
-    font-size: 0.95rem;
-    font-weight: 600;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: $color-text-secondary;
     margin-bottom: 16px;
   }
 }
@@ -120,7 +118,7 @@
   max-width: 36px;
   min-height: 2px;
   border-radius: 3px 3px 0 0;
-  transition: height 0.4s ease;
+  transition: height 0.4s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .barLabel {
@@ -131,10 +129,11 @@
 
 .barValue {
   font-size: 0.65rem;
-  font-weight: 600;
-  color: $color-text-secondary;
+  font-weight: 500;
+  color: $color-text-muted;
   position: absolute;
   top: 0;
+  font-variant-numeric: tabular-nums;
 }
 
 // Funnel
@@ -154,40 +153,41 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   color: $color-text-secondary;
   min-width: 90px;
   flex-shrink: 0;
 }
 
 .funnelDot {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   flex-shrink: 0;
 }
 
 .funnelBarWrap {
   flex: 1;
-  height: 20px;
+  height: 16px;
   background: $color-bg-tertiary;
-  border-radius: 4px;
+  border-radius: 3px;
   overflow: hidden;
 }
 
 .funnelBar {
   height: 100%;
-  border-radius: 4px;
-  transition: width 0.4s ease;
+  border-radius: 3px;
+  transition: width 0.4s cubic-bezier(0.22, 1, 0.36, 1);
   min-width: 2px;
 }
 
 .funnelCount {
-  font-size: 0.8rem;
-  font-weight: 600;
+  font-size: 0.75rem;
+  font-weight: 500;
   color: $color-text-primary;
   min-width: 24px;
   text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
 // Work mode bars
@@ -215,29 +215,30 @@
 
 .donutPct {
   font-size: 0.8rem;
-  font-weight: 600;
+  font-weight: 500;
   color: $color-text-primary;
+  font-variant-numeric: tabular-nums;
 }
 
 .donutBarWrap {
-  height: 8px;
+  height: 6px;
   background: $color-bg-tertiary;
-  border-radius: 4px;
+  border-radius: 3px;
   overflow: hidden;
 }
 
 .donutBar {
   height: 100%;
   background: $color-accent;
-  border-radius: 4px;
-  transition: width 0.4s ease;
+  border-radius: 3px;
+  transition: width 0.4s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 // Companies
 .companyList {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .companyItem {
@@ -250,22 +251,17 @@
 }
 
 .companyRank {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: $color-accent-muted;
-  color: $color-accent;
+  width: 20px;
   font-size: 0.7rem;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  font-weight: 500;
+  color: $color-text-muted;
   flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
 }
 
 .companyName {
   font-size: 0.85rem;
-  font-weight: 500;
+  font-weight: 400;
   color: $color-text-primary;
   flex: 1;
   white-space: nowrap;
@@ -277,6 +273,7 @@
   font-size: 0.75rem;
   color: $color-text-muted;
   flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
 }
 
 // Status overview
@@ -296,8 +293,8 @@
 }
 
 .statusTileDot {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   flex-shrink: 0;
 }
@@ -308,12 +305,13 @@
 }
 
 .statusTileName {
-  font-size: 0.75rem;
-  color: $color-text-secondary;
+  font-size: 0.72rem;
+  color: $color-text-muted;
 }
 
 .statusTileCount {
   font-size: 0.85rem;
-  font-weight: 600;
+  font-weight: 500;
   color: $color-text-primary;
+  font-variant-numeric: tabular-nums;
 }

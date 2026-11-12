@@ -4,15 +4,15 @@
   margin-bottom: 24px;
 
   h2 {
-    font-size: 1.75rem;
-    font-weight: 700;
+    font-size: 1.5rem;
+    font-weight: 600;
     letter-spacing: -0.02em;
     margin-bottom: 4px;
   }
 
   p {
     color: $color-text-secondary;
-    font-size: 0.9rem;
+    font-size: 0.875rem;
   }
 }
 
@@ -38,40 +38,36 @@
 
 .columnOver {
   border-color: $color-accent;
-  background: rgba($color-accent, 0.04);
+  background: rgba($color-accent, 0.03);
 }
 
 .columnHeader {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 14px 14px 10px;
+  padding: 12px 14px;
   border-bottom: 1px solid $color-border;
 }
 
 .columnDot {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   flex-shrink: 0;
 }
 
 .columnTitle {
   font-size: 0.8rem;
-  font-weight: 600;
+  font-weight: 500;
   color: $color-text-secondary;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  flex: 1;
 }
 
 .columnCount {
   margin-left: auto;
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: 0.72rem;
   color: $color-text-muted;
-  background: $color-bg-tertiary;
-  padding: 2px 8px;
-  border-radius: 10px;
+  font-variant-numeric: tabular-nums;
 }
 
 .columnBody {
@@ -88,8 +84,8 @@
   text-align: center;
   padding: 24px 8px;
   color: $color-text-muted;
-  font-size: 0.8rem;
-  border: 1.5px dashed $color-border;
+  font-size: 0.75rem;
+  border: 1px dashed $color-border;
   border-radius: $radius-md;
   flex: 1;
   display: flex;
@@ -103,13 +99,12 @@
   border-radius: $radius-md;
   padding: 12px;
   cursor: grab;
-  transition: all $transition-fast;
+  transition: border-color $transition-fast, background-color $transition-fast;
   user-select: none;
 
   &:hover {
     border-color: $color-border-light;
-    transform: translateY(-1px);
-    box-shadow: $shadow-sm;
+    background: $color-bg-hover;
   }
 
   &:active {
@@ -124,7 +119,7 @@
 
 .cardCompany {
   font-size: 0.85rem;
-  font-weight: 600;
+  font-weight: 500;
   color: $color-text-primary;
   margin-bottom: 2px;
   white-space: nowrap;
@@ -150,7 +145,8 @@
 
 .cardSalary {
   font-size: 0.7rem;
-  color: $color-accent;
+  color: $color-text-muted;
   margin-top: 6px;
-  font-weight: 500;
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
 }

@@ -9,8 +9,8 @@
   gap: 16px;
 
   h2 {
-    font-size: 1.75rem;
-    font-weight: 700;
+    font-size: 1.5rem;
+    font-weight: 600;
     letter-spacing: -0.02em;
   }
 }
@@ -84,13 +84,16 @@
   border: none;
   border-radius: $radius-md;
   font-size: 0.875rem;
-  font-weight: 600;
-  transition: all $transition-fast;
+  font-weight: 500;
+  transition: background-color $transition-fast;
   white-space: nowrap;
 
   &:hover {
     background: $color-accent-hover;
-    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: scale(0.98);
   }
 }
 
@@ -109,10 +112,8 @@
     text-align: left;
     padding: 12px 16px;
     font-size: 0.75rem;
-    font-weight: 600;
+    font-weight: 500;
     color: $color-text-muted;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
     border-bottom: 1px solid $color-border;
     background: $color-bg-tertiary;
     white-space: nowrap;
@@ -143,7 +144,7 @@
 
 .companyCell {
   .company {
-    font-weight: 600;
+    font-weight: 500;
     margin-bottom: 2px;
   }
 
@@ -159,7 +160,7 @@
   }
 
   .workMode {
-    font-size: 0.75rem;
+    font-size: 0.72rem;
     color: $color-text-muted;
     display: inline-block;
     padding: 2px 8px;
@@ -172,19 +173,17 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 12px;
-  border-radius: 20px;
   font-size: 0.8rem;
-  font-weight: 600;
+  font-weight: 400;
+  color: $color-text-secondary;
   white-space: nowrap;
+}
 
-  &::before {
-    content: "";
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: currentColor;
-  }
+.statusDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 
 .actions {
@@ -204,7 +203,7 @@
   color: $color-text-muted;
   border-radius: $radius-sm;
   font-size: 1rem;
-  transition: all $transition-fast;
+  transition: color $transition-fast, background-color $transition-fast;
 
   &:hover {
     background: $color-bg-tertiary;
@@ -212,7 +211,7 @@
   }
 
   &.deleteBtn:hover {
-    background: rgba($color-danger, 0.15);
+    background: rgba($color-danger, 0.12);
     color: $color-danger;
   }
 }
@@ -225,11 +224,11 @@
   svg {
     font-size: 2.5rem;
     margin-bottom: 12px;
-    opacity: 0.4;
+    opacity: 0.3;
   }
 
   p {
-    font-size: 0.9rem;
+    font-size: 0.875rem;
   }
 }
 
@@ -253,7 +252,7 @@
   background: $color-bg-secondary;
   border: 1px solid $color-border;
   border-radius: $radius-lg;
-  padding: 18px;
+  padding: 16px;
 }
 
 .cardHeader {
@@ -264,7 +263,7 @@
 }
 
 .cardCompany {
-  font-weight: 600;
+  font-weight: 500;
   font-size: 1rem;
   margin-bottom: 2px;
 }
@@ -278,7 +277,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
 }
 
 .cardDetail {

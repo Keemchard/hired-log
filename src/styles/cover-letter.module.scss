@@ -4,15 +4,15 @@
   margin-bottom: 24px;
 
   h2 {
-    font-size: 1.75rem;
-    font-weight: 700;
+    font-size: 1.5rem;
+    font-weight: 600;
     letter-spacing: -0.02em;
     margin-bottom: 4px;
   }
 
   p {
     color: $color-text-secondary;
-    font-size: 0.9rem;
+    font-size: 0.875rem;
   }
 }
 
@@ -39,18 +39,14 @@
 }
 
 .label {
-  font-size: 0.8rem;
-  font-weight: 600;
+  font-size: 0.75rem;
+  font-weight: 500;
   color: $color-text-secondary;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
 }
 
 .optional {
-  text-transform: none;
   font-weight: 400;
   color: $color-text-muted;
-  letter-spacing: normal;
 }
 
 .select,
@@ -104,7 +100,7 @@
   color: $color-text-secondary;
 
   span {
-    font-weight: 600;
+    font-weight: 500;
     color: $color-text-muted;
     margin-right: 4px;
   }
@@ -121,19 +117,22 @@
   justify-content: center;
   gap: 8px;
   padding: 12px 24px;
-  background: linear-gradient(135deg, $color-accent, #8b5cf6);
+  background: $color-accent;
   border: none;
   border-radius: $radius-md;
   color: white;
   font-size: 0.875rem;
-  font-weight: 600;
+  font-weight: 500;
   cursor: pointer;
-  transition: all $transition-fast;
+  transition: background-color $transition-fast;
   align-self: flex-start;
 
   &:hover {
-    opacity: 0.9;
-    transform: translateY(-1px);
+    background: $color-accent-hover;
+  }
+
+  &:active {
+    transform: scale(0.98);
   }
 
   &:disabled {
@@ -162,13 +161,13 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 0.9rem;
-  font-weight: 600;
+  font-size: 0.875rem;
+  font-weight: 500;
   color: $color-text-primary;
 
   svg {
-    color: $color-accent;
-    font-size: 1.1rem;
+    color: $color-text-muted;
+    font-size: 1rem;
   }
 }
 
@@ -181,10 +180,10 @@
   border: 1px solid $color-border;
   border-radius: $radius-sm;
   color: $color-text-secondary;
-  font-size: 0.8rem;
-  font-weight: 500;
+  font-size: 0.75rem;
+  font-weight: 400;
   cursor: pointer;
-  transition: all $transition-fast;
+  transition: color $transition-fast, background-color $transition-fast;
 
   &:hover {
     background: $color-bg-hover;
@@ -197,7 +196,7 @@
   line-height: 1.7;
 
   p {
-    font-size: 0.9rem;
+    font-size: 0.875rem;
     color: $color-text-primary;
     margin-bottom: 16px;
 
@@ -210,11 +209,11 @@
 .tips {
   padding: 16px 20px;
   border-top: 1px solid $color-border;
-  background: rgba($color-accent, 0.04);
 
   strong {
-    font-size: 0.8rem;
-    color: $color-accent;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: $color-text-secondary;
     display: block;
     margin-bottom: 8px;
   }
@@ -230,14 +229,14 @@
   li {
     font-size: 0.8rem;
     color: $color-text-secondary;
-    padding-left: 14px;
+    padding-left: 12px;
     position: relative;
 
     &::before {
-      content: "•";
+      content: "·";
       position: absolute;
       left: 0;
-      color: $color-accent;
+      color: $color-text-muted;
     }
   }
 }

@@ -31,7 +31,7 @@ export default function OGImage() {
               width: 72,
               height: 72,
               borderRadius: 18,
-              background: "#6366f1",
+              background: "#2563eb",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -46,7 +46,7 @@ export default function OGImage() {
           </div>
           <div style={{ display: "flex", fontSize: 52, fontWeight: 800, color: "#e8eaf0" }}>
             hired
-            <span style={{ color: "#6366f1" }}>.log</span>
+            <span style={{ color: "#2563eb" }}>.log</span>
           </div>
         </div>
         <div
@@ -75,7 +75,7 @@ export default function OGImage() {
                 borderRadius: 24,
                 fontSize: 16,
                 fontWeight: 600,
-                color: ["#6366f1", "#3b82f6", "#10b981", "#059669"][i],
+                color: ["#2563eb", "#3b82f6", "#4cc38a", "#16a34a"][i],
                 background: [
                   "rgba(99,102,241,0.15)",
                   "rgba(59,130,246,0.15)",

@@ -178,7 +178,7 @@ export default function ResumeMatchScore() {
               {result.strengths.length > 0 && (
                 <div className={styles.detailCard}>
                   <div className={styles.detailTitle}>
-                    <IoRibbon style={{ color: "#6366f1" }} />
+                    <IoRibbon style={{ color: "#2563eb" }} />
                     Key Strengths
                   </div>
                   <ul className={styles.list}>

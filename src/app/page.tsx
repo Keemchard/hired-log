@@ -187,11 +187,11 @@ export default function Home() {
           <div className={styles.logo}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
               <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect width="28" height="28" rx="7" fill="#6366f1"/>
+                <rect width="28" height="28" rx="7" fill="#2563eb"/>
                 <text x="5" y="19" fontFamily="monospace" fontWeight="800" fontSize="13" fill="white">&gt;_</text>
               </svg>
               <h1 style={{ fontSize: "1.1rem", fontWeight: 700, letterSpacing: "-0.02em", margin: 0, color: "var(--color-text-primary)" }}>
-                hired<span style={{ color: "#6366f1" }}>.log</span>
+                hired<span style={{ color: "#2563eb" }}>.log</span>
               </h1>
             </div>
             <p style={{ fontSize: "0.7rem", color: "var(--color-text-muted)", textTransform: "uppercase", letterSpacing: "0.08em", margin: 0 }}>

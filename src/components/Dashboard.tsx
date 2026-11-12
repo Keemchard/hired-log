@@ -66,29 +66,29 @@ export default function Dashboard({
 
       <div className={styles.statsGrid}>
         <div className={styles.statCard}>
-          <div className={styles.statLabel}>Total Applications</div>
-          <div className={styles.statValue} style={{ color: "#6366f1" }}>
+          <div className={styles.statLabel}>Total applications</div>
+          <div className={styles.statValue} style={{ color: "#2563eb" }}>
             {total}
           </div>
           <div className={styles.statFooter}>{thisWeek} this week</div>
         </div>
         <div className={styles.statCard}>
           <div className={styles.statLabel}>Active</div>
-          <div className={styles.statValue} style={{ color: "#3b82f6" }}>
+          <div className={styles.statValue}>
             {active}
           </div>
           <div className={styles.statFooter}>In progress</div>
         </div>
         <div className={styles.statCard}>
           <div className={styles.statLabel}>Offers</div>
-          <div className={styles.statValue} style={{ color: "#10b981" }}>
+          <div className={styles.statValue}>
             {offers}
           </div>
           <div className={styles.statFooter}>Received</div>
         </div>
         <div className={styles.statCard}>
           <div className={styles.statLabel}>Rejected</div>
-          <div className={styles.statValue} style={{ color: "#ef4444" }}>
+          <div className={styles.statValue}>
             {rejected}
           </div>
           <div className={styles.statFooter}>
@@ -135,7 +135,7 @@ export default function Dashboard({
               style={{
                 background: "none",
                 border: "none",
-                color: "#6366f1",
+                color: "#2563eb",
                 cursor: "pointer",
                 fontSize: "0.875rem",
               }}

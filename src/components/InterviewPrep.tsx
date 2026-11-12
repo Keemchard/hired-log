@@ -127,7 +127,7 @@ export default function InterviewPrep({
 
   const getCategoryColor = (cat: string) => {
     if (cat === "behavioral") return "#3b82f6";
-    if (cat === "technical") return "#8b5cf6";
+    if (cat === "technical") return "#64748b";
     return "#f59e0b";
   };
 

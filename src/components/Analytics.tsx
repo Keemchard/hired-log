@@ -159,7 +159,7 @@ export default function Analytics({ applications }: AnalyticsProps) {
           </div>
         </div>
         <div className={styles.rateCard}>
-          <div className={styles.rateValue} style={{ color: "#8b5cf6" }}>
+          <div className={styles.rateValue} style={{ color: "#64748b" }}>
             {interviewRate}%
           </div>
           <div className={styles.rateLabel}>Interview Rate</div>
@@ -194,7 +194,7 @@ export default function Analytics({ applications }: AnalyticsProps) {
                     className={styles.bar}
                     style={{
                       height: `${(w.count / maxWeekly) * 100}%`,
-                      background: w.count > 0 ? "#6366f1" : "transparent",
+                      background: w.count > 0 ? "#2563eb" : "transparent",
                     }}
                   />
                 </div>
@@ -217,7 +217,7 @@ export default function Analytics({ applications }: AnalyticsProps) {
                     className={styles.bar}
                     style={{
                       height: `${(m.count / maxMonthly) * 100}%`,
-                      background: m.count > 0 ? "#8b5cf6" : "transparent",
+                      background: m.count > 0 ? "#64748b" : "transparent",
                     }}
                   />
                 </div>

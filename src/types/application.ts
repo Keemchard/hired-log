@@ -40,13 +40,13 @@ export const STATUS_LABELS: Record<ApplicationStatus, string> = {
 };
 
 export const STATUS_COLORS: Record<ApplicationStatus, string> = {
-  applied: "#6366f1",
-  screening: "#f59e0b",
-  interview: "#3b82f6",
-  technical: "#8b5cf6",
-  offer: "#10b981",
-  accepted: "#059669",
-  rejected: "#ef4444",
+  applied: "#2563eb",
+  screening: "#d97706",
+  interview: "#0ea5e9",
+  technical: "#64748b",
+  offer: "#4cc38a",
+  accepted: "#16a34a",
+  rejected: "#e5484d",
   withdrawn: "#6b7280",
 };
 
