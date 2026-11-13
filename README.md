@@ -36,8 +36,26 @@ A full-featured job hunting tracker built with Next.js, TypeScript, SCSS, and Fi
 | **Application List** | `/` → Applications | `src/components/ApplicationList.tsx` |
 | **Add / Edit Applications** | Modal overlay | `src/components/ApplicationModal.tsx` |
 | **Search, Filter & Sort** | Applications view | `src/components/ApplicationList.tsx` |
+| **Bulk Actions** | Applications view | `src/components/ApplicationList.tsx` |
+| **CSV Export** | Applications view | `src/lib/export.ts` |
 | **Kanban Board** | `/` → Kanban Board | `src/components/KanbanBoard.tsx` |
 | **Analytics & Insights** | `/` → Analytics | `src/components/Analytics.tsx` |
+
+### Application Details
+
+| Feature | Key Files |
+|---|---|
+| **Interview Tracking** | `src/types/application.ts`, `src/components/ApplicationModal.tsx` |
+| **Activity Timeline** | `src/types/application.ts`, `src/app/page.tsx` |
+| **Follow-up Date** | `src/components/ApplicationList.tsx`, `src/components/ApplicationModal.tsx` |
+| **Job Source** | `src/types/application.ts`, `src/components/ApplicationModal.tsx` |
+| **Duplicate Detection** | `src/app/page.tsx` |
+
+### Custom Statuses
+
+| Feature | Key Files |
+|---|---|
+| **Manage Pipeline Statuses** | `src/components/ManageStatusesModal.tsx`, `src/lib/userSettings.ts` |
 
 ### AI Tools (all powered by Gemini)
 
@@ -67,7 +85,31 @@ Stats overview: total applications, active count, offers, rejections, rejection 
 Sortable table (company, status, date applied) with search by company/position/location, status filter, and responsive mobile card view. Full CRUD with ownership-verified updates and deletes.
 
 ### Kanban Board
-Drag-and-drop visual pipeline across all 8 status columns (Applied → Screening → Interview → Technical → Offer → Accepted → Rejected → Withdrawn). Drop a card to update its status directly in Firestore. Click any card to open the edit modal.
+Drag-and-drop visual pipeline across all status columns. Drop a card to update its status directly in Firestore. Click any card to open the edit modal. Column order and labels reflect your custom statuses.
+
+### Bulk Actions
+Select multiple applications with checkboxes, then bulk-delete or bulk-change status in one action. A floating action bar appears at the bottom of the list when any rows are selected.
+
+### CSV Export
+One-click export of all applications to a dated CSV file (`hired-log-YYYY-MM-DD.csv`). Includes company, position, location, work mode, status, source, dates, salary, URL, contact info, notes, and interview entries.
+
+### Interview Tracking
+Log interviews directly on each application — record the date, type (Phone Screen, Technical, Behavioral, Onsite, Other), and optional notes per round.
+
+### Activity Timeline
+Automatic audit trail per application. Events are recorded on creation, every status change, interview additions, and note edits, with timestamps. Visible in the edit modal.
+
+### Follow-up Date
+Set a follow-up reminder date on any application. Overdue follow-ups are highlighted in red in the list view.
+
+### Job Source
+Track where you found each listing — LinkedIn, Indeed, Glassdoor, Referral, Company Website, Handshake, or Other.
+
+### Duplicate Detection
+When adding a new application, the app checks for an existing entry with the same company and position and shows a non-blocking warning toast if one is found.
+
+### Custom Statuses
+Manage your own pipeline stages via the Manage Statuses modal. Add new statuses with a custom label and color, rename or recolor existing ones, reorder by drag-and-drop, and delete any stage. Statuses are saved per user in Firestore and apply across the app (list, kanban, filters, analytics, CSV export). Default statuses (Applied, Screening, Interview, Technical, Offer, Accepted, Rejected, Withdrawn) are restored if the list is cleared.
 
 ### Analytics & Insights
 - **Rate cards:** Response rate, interview rate, offer rate, average days active
@@ -133,6 +175,7 @@ src/
 │   ├── Dashboard.tsx
 │   ├── ApplicationList.tsx
 │   ├── ApplicationModal.tsx
+│   ├── ManageStatusesModal.tsx   # Custom pipeline status editor
 │   ├── KanbanBoard.tsx
 │   ├── Analytics.tsx
 │   ├── CoverLetterGenerator.tsx
@@ -146,6 +189,8 @@ src/
 ├── lib/
 │   ├── firebase.ts
 │   ├── applications.ts
+│   ├── export.ts                 # CSV export
+│   ├── userSettings.ts           # Per-user Firestore settings (statuses)
 │   └── sanitize.ts
 ├── styles/
 │   ├── globals.scss
@@ -159,9 +204,10 @@ src/
 │   ├── cover-letter.module.scss
 │   ├── resume-match.module.scss
 │   ├── interview-prep.module.scss
+│   ├── manage-statuses.module.scss
 │   └── auth.module.scss
 └── types/
-    └── application.ts
+    └── application.ts            # JobApplication, CustomStatus, Interview, TimelineEvent
 
 extension/
 ├── manifest.json
@@ -208,6 +254,8 @@ Get a Gemini API key at [aistudio.google.com](https://aistudio.google.com) — k
 2. **Firestore** — Create a database (Standard edition, nearest region)
 3. **Security Rules** — Publish the rules from `firestore.rules`
 4. **Composite Index** — Create an index on the `applications` collection: `userId` (Ascending) + `createdAt` (Descending)
+
+The app uses two Firestore collections: `applications` (one document per job entry) and `userSettings` (one document per user, stores custom statuses).
 
 ### 4. Run the app
 
