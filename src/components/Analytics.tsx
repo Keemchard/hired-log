@@ -3,15 +3,17 @@
 import {
   JobApplication,
   ApplicationStatus,
-  STATUS_LABELS,
-  STATUS_COLORS,
+  CustomStatus,
   WORK_MODE_LABELS,
   WorkMode,
+  resolveStatusColor,
+  resolveStatusLabel,
 } from "@/types/application";
 import styles from "@/styles/analytics.module.scss";
 
 interface AnalyticsProps {
   applications: JobApplication[];
+  statuses: CustomStatus[];
 }
 
 function getWeekLabel(date: Date): string {
@@ -20,7 +22,7 @@ function getWeekLabel(date: Date): string {
   return start.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
-export default function Analytics({ applications }: AnalyticsProps) {
+export default function Analytics({ applications, statuses }: AnalyticsProps) {
   const total = applications.length;
 
   // Response rate: apps that moved past "applied"
@@ -76,23 +78,10 @@ export default function Analytics({ applications }: AnalyticsProps) {
   }
   const maxWeekly = Math.max(...weeklyData.map((w) => w.count), 1);
 
-  // Status funnel
-  const funnelStages: ApplicationStatus[] = [
-    "applied",
-    "screening",
-    "interview",
-    "technical",
-    "offer",
-    "accepted",
-  ];
-  const funnelData = funnelStages.map((status) => ({
-    status,
-    count: applications.filter((a) => {
-      const idx = funnelStages.indexOf(a.status);
-      const stageIdx = funnelStages.indexOf(status);
-      return idx >= stageIdx || a.status === status;
-    }).length,
-    exact: applications.filter((a) => a.status === status).length,
+  // Status distribution — uses user-defined statuses in their order
+  const statusDist = statuses.map((s) => ({
+    key: s.key,
+    exact: applications.filter((a) => a.status === s.key).length,
   }));
 
   // Work mode distribution
@@ -231,28 +220,25 @@ export default function Analytics({ applications }: AnalyticsProps) {
         </div>
 
         <div className={styles.chartCard}>
-          <h3>Application Funnel</h3>
+          <h3>Status Distribution</h3>
           <div className={styles.funnel}>
-            {funnelStages.map((status) => {
-              const exact = applications.filter(
-                (a) => a.status === status
-              ).length;
+            {statusDist.map(({ key, exact }) => {
               const pct = total > 0 ? Math.round((exact / total) * 100) : 0;
               return (
-                <div key={status} className={styles.funnelRow}>
+                <div key={key} className={styles.funnelRow}>
                   <div className={styles.funnelLabel}>
                     <div
                       className={styles.funnelDot}
-                      style={{ background: STATUS_COLORS[status] }}
+                      style={{ background: resolveStatusColor(key, statuses) }}
                     />
-                    {STATUS_LABELS[status]}
+                    {resolveStatusLabel(key, statuses)}
                   </div>
                   <div className={styles.funnelBarWrap}>
                     <div
                       className={styles.funnelBar}
                       style={{
-                        width: `${Math.max(pct, 2)}%`,
-                        background: STATUS_COLORS[status],
+                        width: `${Math.max(pct, exact > 0 ? 2 : 0)}%`,
+                        background: resolveStatusColor(key, statuses),
                       }}
                     />
                   </div>
@@ -309,31 +295,26 @@ export default function Analytics({ applications }: AnalyticsProps) {
         <div className={styles.chartCard}>
           <h3>Status Overview</h3>
           <div className={styles.statusGrid}>
-            {(Object.keys(STATUS_LABELS) as ApplicationStatus[]).map(
-              (status) => {
-                const count = applications.filter(
-                  (a) => a.status === status
-                ).length;
-                const pct =
-                  total > 0 ? Math.round((count / total) * 100) : 0;
-                return (
-                  <div key={status} className={styles.statusTile}>
-                    <div
-                      className={styles.statusTileDot}
-                      style={{ background: STATUS_COLORS[status] }}
-                    />
-                    <div className={styles.statusTileInfo}>
-                      <span className={styles.statusTileName}>
-                        {STATUS_LABELS[status]}
-                      </span>
-                      <span className={styles.statusTileCount}>
-                        {count} ({pct}%)
-                      </span>
-                    </div>
+            {statuses.map((s) => {
+              const count = applications.filter((a) => a.status === s.key).length;
+              const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+              return (
+                <div key={s.key} className={styles.statusTile}>
+                  <div
+                    className={styles.statusTileDot}
+                    style={{ background: resolveStatusColor(s.key, statuses) }}
+                  />
+                  <div className={styles.statusTileInfo}>
+                    <span className={styles.statusTileName}>
+                      {resolveStatusLabel(s.key, statuses)}
+                    </span>
+                    <span className={styles.statusTileCount}>
+                      {count} ({pct}%)
+                    </span>
                   </div>
-                );
-              }
-            )}
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>

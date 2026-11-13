@@ -17,13 +17,22 @@ import {
 import { Toaster, toast } from "react-hot-toast";
 import { useAuth } from "@/components/AuthProvider";
 import AuthPage from "@/components/AuthPage";
-import { JobApplication } from "@/types/application";
+import {
+  JobApplication,
+  CustomStatus,
+  Interview,
+  TimelineEvent,
+  resolveStatusLabel,
+} from "@/types/application";
 import {
   getApplications,
   addApplication,
   updateApplication,
   deleteApplication,
 } from "@/lib/applications";
+import { getStatuses, saveStatuses } from "@/lib/userSettings";
+import { exportApplicationsCSV } from "@/lib/export";
+import ManageStatusesModal from "@/components/ManageStatusesModal";
 import Dashboard from "@/components/Dashboard";
 import ApplicationList from "@/components/ApplicationList";
 import ApplicationModal from "@/components/ApplicationModal";
@@ -46,6 +55,8 @@ export default function Home() {
   const [applications, setApplications] = useState<JobApplication[]>([]);
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [statuses, setStatuses] = useState<CustomStatus[]>([]);
+  const [manageStatusesOpen, setManageStatusesOpen] = useState(false);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editingApp, setEditingApp] = useState<JobApplication | null>(null);
@@ -68,6 +79,7 @@ export default function Home() {
     if (user) {
       setLoading(true);
       fetchApplications();
+      getStatuses(user.uid).then(setStatuses).catch(() => {});
     }
   }, [user, fetchApplications]);
 
@@ -76,9 +88,31 @@ export default function Home() {
   ) => {
     if (!user) return;
     try {
-      await addApplication(user.uid, data);
+      // Duplicate detection (non-blocking)
+      const duplicate = applications.find(
+        (a) =>
+          a.company.toLowerCase() === data.company.toLowerCase() &&
+          a.position.toLowerCase() === data.position.toLowerCase()
+      );
+      if (duplicate) {
+        toast(`Heads up: you may have already applied to ${data.position} at ${data.company}.`, {
+          icon: "⚠️",
+        });
+      }
+
+      // Seed timeline
+      const createdEvent: TimelineEvent = {
+        id: Date.now().toString(36),
+        date: new Date().toISOString(),
+        type: "created",
+        description: "Application created",
+      };
+      const timeline: TimelineEvent[] = [createdEvent, ...((data.timeline as TimelineEvent[] | undefined) || [])];
+
+      await addApplication(user.uid, { ...data, timeline }, statuses.map((s) => s.key));
       await fetchApplications();
       toast.success("Application added!");
+      navigate("applications");
     } catch {
       toast.error("Failed to add application");
     }
@@ -89,12 +123,49 @@ export default function Home() {
   ) => {
     if (!editingApp || !user) return;
     try {
-      await updateApplication(editingApp.id, user.uid, data);
+      const newEvents: TimelineEvent[] = [];
+
+      if (data.status !== editingApp.status) {
+        newEvents.push({
+          id: Date.now().toString(36),
+          date: new Date().toISOString(),
+          type: "status_change",
+          description: `Status changed: "${resolveStatusLabel(editingApp.status, statuses)}" → "${resolveStatusLabel(data.status as string, statuses)}"`,
+        });
+      }
+      if ((data.notes || "") !== (editingApp.notes || "")) {
+        newEvents.push({
+          id: (Date.now() + 1).toString(36),
+          date: new Date().toISOString(),
+          type: "note_updated",
+          description: "Notes updated",
+        });
+      }
+      const oldCount = editingApp.interviews?.length || 0;
+      const newCount = (data.interviews as Interview[] | undefined)?.length || 0;
+      if (newCount > oldCount) {
+        newEvents.push({
+          id: (Date.now() + 2).toString(36),
+          date: new Date().toISOString(),
+          type: "interview_added",
+          description: "Interview added",
+        });
+      }
+
+      const timeline = [...(editingApp.timeline || []), ...newEvents];
+
+      await updateApplication(editingApp.id, user.uid, { ...data, timeline }, statuses.map((s) => s.key));
       await fetchApplications();
       toast.success("Application updated!");
     } catch {
       toast.error("Failed to update application");
     }
+  };
+
+  const handleSaveStatuses = async (updated: CustomStatus[]) => {
+    if (!user) return;
+    await saveStatuses(user.uid, updated);
+    setStatuses(updated);
   };
 
   const handleDelete = async () => {
@@ -109,12 +180,36 @@ export default function Home() {
     }
   };
 
+  const handleBulkDelete = async (ids: string[]) => {
+    if (!user) return;
+    try {
+      await Promise.all(ids.map((id) => deleteApplication(id, user.uid)));
+      await fetchApplications();
+      toast.success(`${ids.length} application${ids.length > 1 ? "s" : ""} deleted`);
+    } catch {
+      toast.error("Failed to delete applications");
+    }
+  };
+
+  const handleBulkStatusChange = async (ids: string[], status: string) => {
+    if (!user) return;
+    try {
+      await Promise.all(
+        ids.map((id) =>
+          updateApplication(id, user.uid, { status }, statuses.map((s) => s.key))
+        )
+      );
+      await fetchApplications();
+      toast.success(`Status updated for ${ids.length} application${ids.length > 1 ? "s" : ""}`);
+    } catch {
+      toast.error("Failed to update statuses");
+    }
+  };
+
   const handleStatusChange = async (appId: string, newStatus: string) => {
     if (!user) return;
     try {
-      await updateApplication(appId, user.uid, {
-        status: newStatus as import("@/types/application").ApplicationStatus,
-      });
+      await updateApplication(appId, user.uid, { status: newStatus }, statuses.map((s) => s.key));
       await fetchApplications();
       toast.success("Status updated!");
     } catch {
@@ -288,10 +383,24 @@ export default function Home() {
               Loading...
             </div>
           ) : view === "dashboard" ? (
-            <Dashboard applications={applications} onNavigate={navigate} />
+            <Dashboard
+              applications={applications}
+              statuses={statuses}
+              onNavigate={navigate}
+              onManageStatuses={() => setManageStatusesOpen(true)}
+              onAddApplication={() => {
+                setEditingApp(null);
+                setModalOpen(true);
+              }}
+              onEditApplication={(app) => {
+                setEditingApp(app);
+                setModalOpen(true);
+              }}
+            />
           ) : view === "kanban" ? (
             <KanbanBoard
               applications={applications}
+              statuses={statuses}
               onStatusChange={handleStatusChange}
               onEdit={(app) => {
                 setEditingApp(app);
@@ -299,7 +408,7 @@ export default function Home() {
               }}
             />
           ) : view === "analytics" ? (
-            <Analytics applications={applications} />
+            <Analytics applications={applications} statuses={statuses} />
           ) : view === "cover-letter" ? (
             <CoverLetterGenerator applications={applications} />
           ) : view === "resume-match" ? (
@@ -309,6 +418,7 @@ export default function Home() {
           ) : (
             <ApplicationList
               applications={applications}
+              statuses={statuses}
               onAdd={() => {
                 setEditingApp(null);
                 setModalOpen(true);
@@ -318,6 +428,9 @@ export default function Home() {
                 setModalOpen(true);
               }}
               onDelete={(app) => setDeleteTarget(app)}
+              onBulkDelete={handleBulkDelete}
+              onBulkStatusChange={handleBulkStatusChange}
+              onExport={() => exportApplicationsCSV(applications, statuses)}
             />
           )}
           <footer className={styles.footer}>
@@ -341,6 +454,8 @@ export default function Home() {
         }}
         onSubmit={editingApp ? handleUpdate : handleAdd}
         initialData={editingApp}
+        statuses={statuses}
+        onManageStatuses={() => setManageStatusesOpen(true)}
       />
 
       <DeleteConfirmModal
@@ -348,6 +463,13 @@ export default function Home() {
         companyName={deleteTarget?.company || ""}
         onConfirm={handleDelete}
         onCancel={() => setDeleteTarget(null)}
+      />
+
+      <ManageStatusesModal
+        isOpen={manageStatusesOpen}
+        onClose={() => setManageStatusesOpen(false)}
+        statuses={statuses}
+        onSave={handleSaveStatuses}
       />
     </>
   );

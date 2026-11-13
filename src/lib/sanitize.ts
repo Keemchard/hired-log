@@ -23,6 +23,8 @@ const FIELD_LIMITS: Record<string, number> = {
   contactEmail: 200,
   notes: 2000,
   dateApplied: 20,
+  source: 50,
+  followUpDate: 20,
 };
 
 function sanitizeString(value: unknown, maxLength: number): string {
@@ -30,11 +32,15 @@ function sanitizeString(value: unknown, maxLength: number): string {
   return value.trim().slice(0, maxLength);
 }
 
-export function sanitizeApplicationData(data: Record<string, unknown>) {
+export function sanitizeApplicationData(
+  data: Record<string, unknown>,
+  extraValidStatuses: string[] = []
+) {
   const status = data.status as string;
   const workMode = data.workMode as string;
 
-  if (!VALID_STATUSES.includes(status as ApplicationStatus)) {
+  const allValidStatuses: string[] = [...VALID_STATUSES, ...extraValidStatuses];
+  if (!allValidStatuses.includes(status)) {
     throw new Error(`Invalid status: ${status}`);
   }
   if (!VALID_WORK_MODES.includes(workMode as WorkMode)) {
@@ -54,7 +60,7 @@ export function sanitizeApplicationData(data: Record<string, unknown>) {
     throw new Error("Company, position, location, and date applied are required");
   }
 
-  const optionalFields = ["salary", "jobUrl", "contactPerson", "contactEmail", "notes"] as const;
+  const optionalFields = ["salary", "jobUrl", "contactPerson", "contactEmail", "notes", "source", "followUpDate"] as const;
   for (const field of optionalFields) {
     const value = sanitizeString(data[field], FIELD_LIMITS[field]);
     if (value) {

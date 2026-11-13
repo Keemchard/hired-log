@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   IoSearch,
   IoAdd,
@@ -10,11 +10,11 @@ import {
   IoBriefcase,
   IoLocationOutline,
   IoCalendarOutline,
+  IoDownload,
 } from "react-icons/io5";
 import {
   JobApplication,
-  ApplicationStatus,
-  STATUS_LABELS,
+  CustomStatus,
   WORK_MODE_LABELS,
 } from "@/types/application";
 import StatusBadge from "./StatusBadge";
@@ -22,21 +22,39 @@ import styles from "@/styles/applications.module.scss";
 
 interface ApplicationListProps {
   applications: JobApplication[];
+  statuses: CustomStatus[];
   onAdd: () => void;
   onEdit: (app: JobApplication) => void;
   onDelete: (app: JobApplication) => void;
+  onBulkDelete: (ids: string[]) => void;
+  onBulkStatusChange: (ids: string[], status: string) => void;
+  onExport: () => void;
 }
+
+const today = new Date().toISOString().split("T")[0];
 
 export default function ApplicationList({
   applications,
+  statuses,
   onAdd,
   onEdit,
   onDelete,
+  onBulkDelete,
+  onBulkStatusChange,
+  onExport,
 }: ApplicationListProps) {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [sortField, setSortField] = useState<string>("dateApplied");
-  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [sortKey, setSortKey] = useState<string>("dateApplied_desc");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkStatus, setBulkStatus] = useState<string>("");
+
+  const [sortField, sortDir] = sortKey.split("_") as [string, "asc" | "desc"];
+
+  // Clear selection when applications list refreshes
+  useEffect(() => {
+    setSelectedIds(new Set());
+  }, [applications]);
 
   const filtered = useMemo(() => {
     let result = [...applications];
@@ -47,7 +65,9 @@ export default function ApplicationList({
         (a) =>
           a.company.toLowerCase().includes(q) ||
           a.position.toLowerCase().includes(q) ||
-          a.location.toLowerCase().includes(q)
+          a.location.toLowerCase().includes(q) ||
+          (a.notes || "").toLowerCase().includes(q) ||
+          (a.contactPerson || "").toLowerCase().includes(q)
       );
     }
 
@@ -68,6 +88,10 @@ export default function ApplicationList({
           aVal = a.status;
           bVal = b.status;
           break;
+        case "updatedAt":
+          aVal = a.updatedAt;
+          bVal = b.updatedAt;
+          break;
         case "dateApplied":
         default:
           aVal = a.dateApplied;
@@ -84,16 +108,47 @@ export default function ApplicationList({
 
   const toggleSort = (field: string) => {
     if (sortField === field) {
-      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+      setSortKey(`${field}_${sortDir === "asc" ? "desc" : "asc"}`);
     } else {
-      setSortField(field);
-      setSortDir("desc");
+      setSortKey(`${field}_desc`);
     }
   };
 
   const sortIndicator = (field: string) => {
     if (sortField !== field) return "";
     return sortDir === "asc" ? " ↑" : " ↓";
+  };
+
+  const allFilteredSelected =
+    filtered.length > 0 && filtered.every((a) => selectedIds.has(a.id));
+
+  const toggleSelectAll = () => {
+    if (allFilteredSelected) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filtered.map((a) => a.id)));
+    }
+  };
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const handleBulkStatusApply = () => {
+    if (!bulkStatus) return;
+    onBulkStatusChange(Array.from(selectedIds), bulkStatus);
+    setSelectedIds(new Set());
+    setBulkStatus("");
+  };
+
+  const handleBulkDelete = () => {
+    onBulkDelete(Array.from(selectedIds));
+    setSelectedIds(new Set());
   };
 
   return (
@@ -111,7 +166,7 @@ export default function ApplicationList({
           <input
             className={styles.searchInput}
             type="text"
-            placeholder="Search by company, position, or location..."
+            placeholder="Search company, position, location, notes..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -122,12 +177,23 @@ export default function ApplicationList({
           onChange={(e) => setStatusFilter(e.target.value)}
         >
           <option value="all">All Status</option>
-          {Object.entries(STATUS_LABELS).map(([value, label]) => (
-            <option key={value} value={value}>
-              {label}
-            </option>
+          {statuses.map((s) => (
+            <option key={s.key} value={s.key}>{s.label}</option>
           ))}
         </select>
+        <select
+          className={styles.filterSelect}
+          value={sortKey}
+          onChange={(e) => setSortKey(e.target.value)}
+        >
+          <option value="dateApplied_desc">Date Applied ↓</option>
+          <option value="dateApplied_asc">Date Applied ↑</option>
+          <option value="updatedAt_desc">Last Updated ↓</option>
+          <option value="updatedAt_asc">Last Updated ↑</option>
+        </select>
+        <button className={styles.exportBtn} onClick={onExport} title="Export to CSV">
+          <IoDownload /> Export
+        </button>
       </div>
 
       {filtered.length === 0 ? (
@@ -148,6 +214,15 @@ export default function ApplicationList({
               <table className={styles.table}>
                 <thead>
                   <tr>
+                    <th className={styles.checkboxCell}>
+                      <input
+                        type="checkbox"
+                        className={styles.checkbox}
+                        checked={allFilteredSelected}
+                        onChange={toggleSelectAll}
+                        title="Select all"
+                      />
+                    </th>
                     <th onClick={() => toggleSort("company")}>
                       Company{sortIndicator("company")}
                     </th>
@@ -158,13 +233,24 @@ export default function ApplicationList({
                     <th onClick={() => toggleSort("dateApplied")}>
                       Date Applied{sortIndicator("dateApplied")}
                     </th>
+                    <th onClick={() => toggleSort("updatedAt")}>
+                      Last Updated{sortIndicator("updatedAt")}
+                    </th>
                     <th>Salary</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filtered.map((app) => (
-                    <tr key={app.id}>
+                    <tr key={app.id} style={{ opacity: selectedIds.has(app.id) ? 0.85 : 1 }}>
+                      <td className={styles.checkboxCell}>
+                        <input
+                          type="checkbox"
+                          className={styles.checkbox}
+                          checked={selectedIds.has(app.id)}
+                          onChange={() => toggleSelect(app.id)}
+                        />
+                      </td>
                       <td>
                         <div className={styles.companyCell}>
                           <div className={styles.company}>{app.company}</div>
@@ -180,10 +266,30 @@ export default function ApplicationList({
                         </div>
                       </td>
                       <td>
-                        <StatusBadge status={app.status} />
+                        <StatusBadge status={app.status} statuses={statuses} />
                       </td>
                       <td>
-                        {new Date(app.dateApplied).toLocaleDateString("en-US", {
+                        <div>
+                          {new Date(app.dateApplied).toLocaleDateString("en-US", {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                          })}
+                          {app.followUpDate && (
+                            <div
+                              style={{
+                                fontSize: "0.72rem",
+                                color: app.followUpDate < today ? "var(--color-danger, #e5484d)" : "var(--color-text-muted)",
+                                marginTop: 2,
+                              }}
+                            >
+                              Follow-up: {app.followUpDate}
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                      <td>
+                        {new Date(app.updatedAt).toLocaleDateString("en-US", {
                           year: "numeric",
                           month: "short",
                           day: "numeric",
@@ -234,7 +340,7 @@ export default function ApplicationList({
                     <div className={styles.cardCompany}>{app.company}</div>
                     <div className={styles.cardPosition}>{app.position}</div>
                   </div>
-                  <StatusBadge status={app.status} />
+                  <StatusBadge status={app.status} statuses={statuses} />
                 </div>
                 <div className={styles.cardDetails}>
                   <span className={styles.cardDetail}>
@@ -243,6 +349,14 @@ export default function ApplicationList({
                   <span className={styles.cardDetail}>
                     <IoCalendarOutline />{" "}
                     {new Date(app.dateApplied).toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                    })}
+                  </span>
+                  <span className={styles.cardDetail}>
+                    Updated{" "}
+                    {new Date(app.updatedAt).toLocaleDateString("en-US", {
                       month: "short",
                       day: "numeric",
                       year: "numeric",
@@ -263,10 +377,7 @@ export default function ApplicationList({
                       <IoOpen />
                     </a>
                   )}
-                  <button
-                    className={styles.actionBtn}
-                    onClick={() => onEdit(app)}
-                  >
+                  <button className={styles.actionBtn} onClick={() => onEdit(app)}>
                     <IoPencil />
                   </button>
                   <button
@@ -280,6 +391,36 @@ export default function ApplicationList({
             ))}
           </div>
         </>
+      )}
+
+      {/* Bulk action bar */}
+      {selectedIds.size > 0 && (
+        <div className={styles.bulkBar}>
+          <span className={styles.bulkCount}>{selectedIds.size} selected</span>
+          <div className={styles.bulkDivider} />
+          <select
+            className={styles.filterSelect}
+            value={bulkStatus}
+            onChange={(e) => setBulkStatus(e.target.value)}
+            style={{ padding: "6px 32px 6px 10px", fontSize: "0.8rem" }}
+          >
+            <option value="">Change Status...</option>
+            {statuses.map((s) => (
+              <option key={s.key} value={s.key}>{s.label}</option>
+            ))}
+          </select>
+          {bulkStatus && (
+            <button className={styles.addStatusConfirm ?? ""} onClick={handleBulkStatusApply}
+              style={{ padding: "6px 14px", background: "var(--color-accent, #2563eb)", border: "none", borderRadius: 6, color: "white", fontSize: "0.8rem", cursor: "pointer" }}
+            >
+              Apply
+            </button>
+          )}
+          <div className={styles.bulkDivider} />
+          <button className={styles.bulkDeleteBtn} onClick={handleBulkDelete}>
+            <IoTrash /> Delete
+          </button>
+        </div>
       )}
     </div>
   );

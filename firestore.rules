@@ -21,6 +21,10 @@ service cloud.firestore {
         && isValidApplication(request.resource.data);
     }
 
+    match /userSettings/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
     // Deny everything else
     match /{document=**} {
       allow read, write: if false;
@@ -29,14 +33,13 @@ service cloud.firestore {
 }
 
 function isValidApplication(data) {
-  let validStatuses = ['applied', 'screening', 'interview', 'technical', 'offer', 'accepted', 'rejected', 'withdrawn'];
   let validWorkModes = ['remote', 'onsite', 'hybrid', 'wfh'];
 
   return data.keys().hasAll(['company', 'position', 'location', 'workMode', 'status', 'dateApplied', 'userId', 'createdAt', 'updatedAt'])
     && data.company is string && data.company.size() > 0 && data.company.size() <= 200
     && data.position is string && data.position.size() > 0 && data.position.size() <= 200
     && data.location is string && data.location.size() > 0 && data.location.size() <= 200
-    && data.status in validStatuses
+    && data.status is string && data.status.size() > 0 && data.status.size() <= 50
     && data.workMode in validWorkModes
     && data.dateApplied is string && data.dateApplied.size() <= 20
     && data.userId is string

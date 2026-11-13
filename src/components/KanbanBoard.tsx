@@ -3,52 +3,43 @@
 import { useState, useRef } from "react";
 import {
   JobApplication,
-  ApplicationStatus,
-  STATUS_LABELS,
-  STATUS_COLORS,
+  CustomStatus,
+  resolveStatusColor,
+  resolveStatusLabel,
 } from "@/types/application";
 import StatusBadge from "./StatusBadge";
 import styles from "@/styles/kanban.module.scss";
 
 interface KanbanBoardProps {
   applications: JobApplication[];
-  onStatusChange: (appId: string, newStatus: ApplicationStatus) => void;
+  statuses: CustomStatus[];
+  onStatusChange: (appId: string, newStatus: string) => void;
   onEdit: (app: JobApplication) => void;
 }
 
-const COLUMNS: ApplicationStatus[] = [
-  "applied",
-  "screening",
-  "interview",
-  "technical",
-  "offer",
-  "accepted",
-  "rejected",
-  "withdrawn",
-];
-
 export default function KanbanBoard({
   applications,
+  statuses,
   onStatusChange,
   onEdit,
 }: KanbanBoardProps) {
   const [draggedApp, setDraggedApp] = useState<string | null>(null);
-  const [dragOverCol, setDragOverCol] = useState<ApplicationStatus | null>(null);
+  const [dragOverCol, setDragOverCol] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const grouped = COLUMNS.reduce(
-    (acc, status) => {
-      acc[status] = applications.filter((a) => a.status === status);
+  const grouped = statuses.reduce(
+    (acc, s) => {
+      acc[s.key] = applications.filter((a) => a.status === s.key);
       return acc;
     },
-    {} as Record<ApplicationStatus, JobApplication[]>
+    {} as Record<string, JobApplication[]>
   );
 
   const handleDragStart = (appId: string) => {
     setDraggedApp(appId);
   };
 
-  const handleDragOver = (e: React.DragEvent, status: ApplicationStatus) => {
+  const handleDragOver = (e: React.DragEvent, status: string) => {
     e.preventDefault();
     setDragOverCol(status);
   };
@@ -57,7 +48,7 @@ export default function KanbanBoard({
     setDragOverCol(null);
   };
 
-  const handleDrop = (status: ApplicationStatus) => {
+  const handleDrop = (status: string) => {
     if (draggedApp) {
       const app = applications.find((a) => a.id === draggedApp);
       if (app && app.status !== status) {
@@ -81,28 +72,28 @@ export default function KanbanBoard({
       </div>
 
       <div className={styles.board} ref={scrollRef}>
-        {COLUMNS.map((status) => (
+        {statuses.map((s) => (
           <div
-            key={status}
-            className={`${styles.column} ${dragOverCol === status ? styles.columnOver : ""}`}
-            onDragOver={(e) => handleDragOver(e, status)}
+            key={s.key}
+            className={`${styles.column} ${dragOverCol === s.key ? styles.columnOver : ""}`}
+            onDragOver={(e) => handleDragOver(e, s.key)}
             onDragLeave={handleDragLeave}
-            onDrop={() => handleDrop(status)}
+            onDrop={() => handleDrop(s.key)}
           >
             <div className={styles.columnHeader}>
               <div
                 className={styles.columnDot}
-                style={{ background: STATUS_COLORS[status] }}
+                style={{ background: resolveStatusColor(s.key, statuses) }}
               />
-              <span className={styles.columnTitle}>{STATUS_LABELS[status]}</span>
-              <span className={styles.columnCount}>{grouped[status].length}</span>
+              <span className={styles.columnTitle}>{resolveStatusLabel(s.key, statuses)}</span>
+              <span className={styles.columnCount}>{(grouped[s.key] || []).length}</span>
             </div>
 
             <div className={styles.columnBody}>
-              {grouped[status].length === 0 ? (
+              {(grouped[s.key] || []).length === 0 ? (
                 <div className={styles.emptyCol}>Drop here</div>
               ) : (
-                grouped[status].map((app) => (
+                (grouped[s.key] || []).map((app) => (
                   <div
                     key={app.id}
                     className={`${styles.card} ${draggedApp === app.id ? styles.cardDragging : ""}`}

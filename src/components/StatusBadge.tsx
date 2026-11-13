@@ -1,23 +1,25 @@
 "use client";
 
 import {
-  ApplicationStatus,
-  STATUS_LABELS,
-  STATUS_COLORS,
+  CustomStatus,
+  resolveStatusColor,
+  resolveStatusLabel,
 } from "@/types/application";
 import styles from "@/styles/applications.module.scss";
 
 interface StatusBadgeProps {
-  status: ApplicationStatus;
+  status: string;
+  statuses?: CustomStatus[];
 }
 
-export default function StatusBadge({ status }: StatusBadgeProps) {
-  const color = STATUS_COLORS[status];
+export default function StatusBadge({ status, statuses = [] }: StatusBadgeProps) {
+  const color = resolveStatusColor(status, statuses);
+  const label = resolveStatusLabel(status, statuses);
 
   return (
     <span className={styles.statusBadge}>
       <span className={styles.statusDot} style={{ background: color }} />
-      {STATUS_LABELS[status]}
+      {label}
     </span>
   );
 }

@@ -33,12 +33,16 @@ export async function getApplications(
 
 export async function addApplication(
   userId: string,
-  data: Omit<JobApplication, "id" | "userId" | "createdAt" | "updatedAt">
+  data: Omit<JobApplication, "id" | "userId" | "createdAt" | "updatedAt">,
+  extraValidStatuses: string[] = []
 ): Promise<string> {
-  const sanitized = sanitizeApplicationData(data as Record<string, unknown>);
+  const { interviews, timeline, ...rest } = data as Record<string, unknown>;
+  const sanitized = sanitizeApplicationData(rest, extraValidStatuses);
   const now = new Date().toISOString();
   const docRef = await addDoc(collection(db, COLLECTION_NAME), {
     ...sanitized,
+    interviews: interviews || [],
+    timeline: timeline || [],
     userId,
     createdAt: now,
     updatedAt: now,
@@ -49,26 +53,36 @@ export async function addApplication(
 export async function updateApplication(
   id: string,
   userId: string,
-  data: Partial<Omit<JobApplication, "id" | "userId" | "createdAt">>
+  data: Partial<Omit<JobApplication, "id" | "userId" | "createdAt">>,
+  extraValidStatuses: string[] = []
 ): Promise<void> {
   const docRef = doc(db, COLLECTION_NAME, id);
 
-  // Verify ownership before updating
   const docSnap = await getDoc(docRef);
   if (!docSnap.exists() || docSnap.data().userId !== userId) {
     throw new Error("Unauthorized");
   }
 
-  const sanitized = sanitizeApplicationData({
-    ...docSnap.data(),
-    ...data,
-  } as Record<string, unknown>);
+  const { interviews, timeline, ...rest } = data as Record<string, unknown>;
 
-  await updateDoc(docRef, {
+  const sanitized = sanitizeApplicationData(
+    {
+      ...docSnap.data(),
+      ...rest,
+    } as Record<string, unknown>,
+    extraValidStatuses
+  );
+
+  const updatePayload: Record<string, unknown> = {
     ...sanitized,
     userId,
     updatedAt: new Date().toISOString(),
-  });
+  };
+
+  if (interviews !== undefined) updatePayload.interviews = interviews;
+  if (timeline !== undefined) updatePayload.timeline = timeline;
+
+  await updateDoc(docRef, updatePayload);
 }
 
 export async function deleteApplication(
@@ -77,7 +91,6 @@ export async function deleteApplication(
 ): Promise<void> {
   const docRef = doc(db, COLLECTION_NAME, id);
 
-  // Verify ownership before deleting
   const docSnap = await getDoc(docRef);
   if (!docSnap.exists() || docSnap.data().userId !== userId) {
     throw new Error("Unauthorized");

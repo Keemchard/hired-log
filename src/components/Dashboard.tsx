@@ -1,29 +1,31 @@
 "use client";
 
-import {
-  IoDocumentText,
-  IoPeople,
-  IoCheckmarkCircle,
-  IoCloseCircle,
-  IoBriefcase,
-} from "react-icons/io5";
+import { IoAdd, IoBriefcase } from "react-icons/io5";
 import {
   JobApplication,
-  ApplicationStatus,
-  STATUS_LABELS,
-  STATUS_COLORS,
+  CustomStatus,
+  resolveStatusColor,
+  resolveStatusLabel,
 } from "@/types/application";
 import StatusBadge from "./StatusBadge";
 import styles from "@/styles/dashboard.module.scss";
 
 interface DashboardProps {
   applications: JobApplication[];
+  statuses: CustomStatus[];
   onNavigate: (view: string) => void;
+  onManageStatuses: () => void;
+  onAddApplication: () => void;
+  onEditApplication: (app: JobApplication) => void;
 }
 
 export default function Dashboard({
   applications,
+  statuses,
   onNavigate,
+  onManageStatuses,
+  onAddApplication,
+  onEditApplication,
 }: DashboardProps) {
   const total = applications.length;
   const active = applications.filter(
@@ -40,7 +42,7 @@ export default function Dashboard({
       acc[app.status] = (acc[app.status] || 0) + 1;
       return acc;
     },
-    {} as Record<ApplicationStatus, number>
+    {} as Record<string, number>
   );
 
   const recent = [...applications]
@@ -60,8 +62,13 @@ export default function Dashboard({
   return (
     <div>
       <div className={styles.header}>
-        <h2>Dashboard</h2>
-        <p>Overview of your job application progress</p>
+        <div>
+          <h2>Dashboard</h2>
+          <p>Overview of your job application progress</p>
+        </div>
+        <button className={styles.addBtn} onClick={onAddApplication}>
+          <IoAdd /> Add Application
+        </button>
       </div>
 
       <div className={styles.statsGrid}>
@@ -102,26 +109,39 @@ export default function Dashboard({
       <div className={styles.section}>
         <div className={styles.sectionHeader}>
           <h3>Status Breakdown</h3>
+          <button
+            onClick={onManageStatuses}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 5,
+              background: "none",
+              border: "none",
+              color: "var(--color-text-muted)",
+              fontSize: "0.8rem",
+              cursor: "pointer",
+            }}
+          >
+            Manage
+          </button>
         </div>
         <div className={styles.statusBreakdown}>
-          {(Object.keys(STATUS_LABELS) as ApplicationStatus[]).map(
-            (status) => (
-              <div key={status} className={styles.statusItem}>
-                <div
-                  className={styles.statusDot}
-                  style={{ background: STATUS_COLORS[status] }}
-                />
-                <div className={styles.statusInfo}>
-                  <div className={styles.statusName}>
-                    {STATUS_LABELS[status]}
-                  </div>
-                  <div className={styles.statusCount}>
-                    {statusCounts[status] || 0}
-                  </div>
+          {statuses.map((s) => (
+            <div key={s.key} className={styles.statusItem}>
+              <div
+                className={styles.statusDot}
+                style={{ background: resolveStatusColor(s.key, statuses) }}
+              />
+              <div className={styles.statusInfo}>
+                <div className={styles.statusName}>
+                  {resolveStatusLabel(s.key, statuses)}
+                </div>
+                <div className={styles.statusCount}>
+                  {statusCounts[s.key] || 0}
                 </div>
               </div>
-            )
-          )}
+            </div>
+          ))}
         </div>
       </div>
 
@@ -148,20 +168,25 @@ export default function Dashboard({
           <div className={styles.emptyState}>
             <IoBriefcase />
             <h3>No applications yet</h3>
-            <p>
-              Start tracking your job applications to see your progress here.
-            </p>
+            <p>Start tracking your job applications to see your progress here.</p>
+            <button className={styles.addBtn} onClick={onAddApplication}>
+              <IoAdd /> Add Application
+            </button>
           </div>
         ) : (
           <div className={styles.recentList}>
             {recent.map((app) => (
-              <div key={app.id} className={styles.recentItem}>
+              <button
+                key={app.id}
+                className={styles.recentItem}
+                onClick={() => onEditApplication(app)}
+              >
                 <div className={styles.recentInfo}>
                   <span className={styles.company}>{app.company}</span>
                   <span className={styles.position}>{app.position}</span>
                 </div>
                 <div className={styles.recentMeta}>
-                  <StatusBadge status={app.status} />
+                  <StatusBadge status={app.status} statuses={statuses} />
                   <span className={styles.date}>
                     {new Date(app.dateApplied).toLocaleDateString("en-US", {
                       month: "short",
@@ -169,7 +194,7 @@ export default function Dashboard({
                     })}
                   </span>
                 </div>
-              </div>
+              </button>
             ))}
           </div>
         )}

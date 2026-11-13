@@ -2,6 +2,10 @@
 
 .header {
   margin-bottom: 32px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
 
   h2 {
     font-size: 1.5rem;
@@ -13,6 +17,30 @@
   p {
     color: $color-text-secondary;
     font-size: 0.875rem;
+  }
+}
+
+.addBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 16px;
+  background: $color-accent;
+  border: none;
+  border-radius: $radius-md;
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background-color $transition-fast;
+
+  svg {
+    font-size: 1rem;
+  }
+
+  &:hover {
+    background: $color-accent-hover;
   }
 }
 
@@ -122,11 +150,15 @@
   background: $color-bg-secondary;
   border: 1px solid $color-border;
   border-radius: $radius-md;
-  transition: border-color $transition-fast, background-color $transition-fast;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  transition: border-color $transition-fast, background-color $transition-fast, transform $transition-fast;
 
   &:hover {
     border-color: $color-border-light;
     background: $color-bg-tertiary;
+    transform: translateX(2px);
   }
 }
 
@@ -162,6 +194,9 @@
   text-align: center;
   padding: 60px 20px;
   color: $color-text-muted;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 
   svg {
     font-size: 2.5rem;
