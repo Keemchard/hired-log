@@ -87,79 +87,92 @@ export default function Home() {
     data: Omit<JobApplication, "id" | "userId" | "createdAt" | "updatedAt">
   ) => {
     if (!user) return;
-    try {
-      // Duplicate detection (non-blocking)
-      const duplicate = applications.find(
-        (a) =>
-          a.company.toLowerCase() === data.company.toLowerCase() &&
-          a.position.toLowerCase() === data.position.toLowerCase()
-      );
-      if (duplicate) {
-        toast(`Heads up: you may have already applied to ${data.position} at ${data.company}.`, {
-          icon: "⚠️",
-        });
-      }
 
-      // Seed timeline
-      const createdEvent: TimelineEvent = {
-        id: Date.now().toString(36),
-        date: new Date().toISOString(),
-        type: "created",
-        description: "Application created",
-      };
-      const timeline: TimelineEvent[] = [createdEvent, ...((data.timeline as TimelineEvent[] | undefined) || [])];
-
-      await addApplication(user.uid, { ...data, timeline }, statuses.map((s) => s.key));
-      await fetchApplications();
-      toast.success("Application added!");
-      navigate("applications");
-    } catch {
-      toast.error("Failed to add application");
+    const duplicate = applications.find(
+      (a) =>
+        a.company.toLowerCase() === data.company.toLowerCase() &&
+        a.position.toLowerCase() === data.position.toLowerCase()
+    );
+    if (duplicate) {
+      toast(`Heads up: you may have already applied to ${data.position} at ${data.company}.`, {
+        icon: "⚠️",
+      });
     }
+
+    const createdEvent: TimelineEvent = {
+      id: Date.now().toString(36),
+      date: new Date().toISOString(),
+      type: "created",
+      description: "Application created",
+    };
+    const timeline: TimelineEvent[] = [createdEvent, ...((data.timeline as TimelineEvent[] | undefined) || [])];
+
+    let id: string;
+    try {
+      id = await addApplication(user.uid, { ...data, timeline }, statuses.map((s) => s.key));
+    } catch (err) {
+      toast.error("Failed to add application");
+      throw err;
+    }
+    const now = new Date().toISOString();
+    setApplications((prev) => [
+      { id, userId: user.uid, ...data, timeline, createdAt: now, updatedAt: now } as JobApplication,
+      ...prev,
+    ]);
+    toast.success("Application added!");
+    navigate("applications");
   };
 
   const handleUpdate = async (
     data: Omit<JobApplication, "id" | "userId" | "createdAt" | "updatedAt">
   ) => {
     if (!editingApp || !user) return;
-    try {
-      const newEvents: TimelineEvent[] = [];
 
-      if (data.status !== editingApp.status) {
-        newEvents.push({
-          id: Date.now().toString(36),
-          date: new Date().toISOString(),
-          type: "status_change",
-          description: `Status changed: "${resolveStatusLabel(editingApp.status, statuses)}" → "${resolveStatusLabel(data.status as string, statuses)}"`,
-        });
-      }
-      if ((data.notes || "") !== (editingApp.notes || "")) {
-        newEvents.push({
-          id: (Date.now() + 1).toString(36),
-          date: new Date().toISOString(),
-          type: "note_updated",
-          description: "Notes updated",
-        });
-      }
-      const oldCount = editingApp.interviews?.length || 0;
-      const newCount = (data.interviews as Interview[] | undefined)?.length || 0;
-      if (newCount > oldCount) {
-        newEvents.push({
-          id: (Date.now() + 2).toString(36),
-          date: new Date().toISOString(),
-          type: "interview_added",
-          description: "Interview added",
-        });
-      }
+    const newEvents: TimelineEvent[] = [];
 
-      const timeline = [...(editingApp.timeline || []), ...newEvents];
-
-      await updateApplication(editingApp.id, user.uid, { ...data, timeline }, statuses.map((s) => s.key));
-      await fetchApplications();
-      toast.success("Application updated!");
-    } catch {
-      toast.error("Failed to update application");
+    if (data.status !== editingApp.status) {
+      newEvents.push({
+        id: Date.now().toString(36),
+        date: new Date().toISOString(),
+        type: "status_change",
+        description: `Status changed: "${resolveStatusLabel(editingApp.status, statuses)}" → "${resolveStatusLabel(data.status as string, statuses)}"`,
+      });
     }
+    if ((data.notes || "") !== (editingApp.notes || "")) {
+      newEvents.push({
+        id: (Date.now() + 1).toString(36),
+        date: new Date().toISOString(),
+        type: "note_updated",
+        description: "Notes updated",
+      });
+    }
+    const oldCount = editingApp.interviews?.length || 0;
+    const newCount = (data.interviews as Interview[] | undefined)?.length || 0;
+    if (newCount > oldCount) {
+      newEvents.push({
+        id: (Date.now() + 2).toString(36),
+        date: new Date().toISOString(),
+        type: "interview_added",
+        description: "Interview added",
+      });
+    }
+
+    const timeline = [...(editingApp.timeline || []), ...newEvents];
+
+    try {
+      await updateApplication(editingApp.id, user.uid, { ...data, timeline }, statuses.map((s) => s.key));
+    } catch (err) {
+      toast.error("Failed to update application");
+      throw err;
+    }
+    setApplications((prev) =>
+      prev.map((a) =>
+        a.id === editingApp.id
+          ? { ...a, ...data, timeline, updatedAt: new Date().toISOString() }
+          : a
+      )
+    );
+    toast.success("Application updated!");
   };
 
   const handleSaveStatuses = async (updated: CustomStatus[]) => {
@@ -172,7 +185,7 @@ export default function Home() {
     if (!deleteTarget || !user) return;
     try {
       await deleteApplication(deleteTarget.id, user.uid);
-      await fetchApplications();
+      setApplications((prev) => prev.filter((a) => a.id !== deleteTarget.id));
       toast.success("Application deleted");
       setDeleteTarget(null);
     } catch {
@@ -184,10 +197,12 @@ export default function Home() {
     if (!user) return;
     try {
       await Promise.all(ids.map((id) => deleteApplication(id, user.uid)));
-      await fetchApplications();
+      const idSet = new Set(ids);
+      setApplications((prev) => prev.filter((a) => !idSet.has(a.id)));
       toast.success(`${ids.length} application${ids.length > 1 ? "s" : ""} deleted`);
     } catch {
       toast.error("Failed to delete applications");
+      fetchApplications().catch(() => {});
     }
   };
 
@@ -199,10 +214,13 @@ export default function Home() {
           updateApplication(id, user.uid, { status }, statuses.map((s) => s.key))
         )
       );
-      await fetchApplications();
+      setApplications((prev) =>
+        prev.map((a) => (ids.includes(a.id) ? { ...a, status, updatedAt: new Date().toISOString() } : a))
+      );
       toast.success(`Status updated for ${ids.length} application${ids.length > 1 ? "s" : ""}`);
     } catch {
       toast.error("Failed to update statuses");
+      fetchApplications().catch(() => {});
     }
   };
 
@@ -210,7 +228,9 @@ export default function Home() {
     if (!user) return;
     try {
       await updateApplication(appId, user.uid, { status: newStatus }, statuses.map((s) => s.key));
-      await fetchApplications();
+      setApplications((prev) =>
+        prev.map((a) => (a.id === appId ? { ...a, status: newStatus, updatedAt: new Date().toISOString() } : a))
+      );
       toast.success("Status updated!");
     } catch {
       toast.error("Failed to update status");
@@ -260,9 +280,9 @@ export default function Home() {
         position="top-right"
         toastOptions={{
           style: {
-            background: "#1a1d27",
-            color: "#e8eaf0",
-            border: "1px solid #2e3348",
+            background: "var(--color-bg-secondary)",
+            color: "var(--color-text-primary)",
+            border: "1px solid var(--color-border)",
             borderRadius: "10px",
           },
         }}

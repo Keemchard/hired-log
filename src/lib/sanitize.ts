@@ -62,18 +62,15 @@ export function sanitizeApplicationData(
 
   const optionalFields = ["salary", "jobUrl", "contactPerson", "contactEmail", "notes", "source", "followUpDate"] as const;
   for (const field of optionalFields) {
-    const value = sanitizeString(data[field], FIELD_LIMITS[field]);
-    if (value) {
-      sanitized[field] = value;
-    }
+    sanitized[field] = sanitizeString(data[field], FIELD_LIMITS[field]);
   }
 
   if (sanitized.jobUrl && !isValidUrl(sanitized.jobUrl)) {
-    delete sanitized.jobUrl;
+    sanitized.jobUrl = "";
   }
 
   if (sanitized.contactEmail && !isValidEmail(sanitized.contactEmail)) {
-    delete sanitized.contactEmail;
+    sanitized.contactEmail = "";
   }
 
   return sanitized;

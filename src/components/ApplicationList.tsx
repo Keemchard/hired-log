@@ -31,8 +31,6 @@ interface ApplicationListProps {
   onExport: () => void;
 }
 
-const today = new Date().toISOString().split("T")[0];
-
 export default function ApplicationList({
   applications,
   statuses,
@@ -48,6 +46,8 @@ export default function ApplicationList({
   const [sortKey, setSortKey] = useState<string>("dateApplied_desc");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkStatus, setBulkStatus] = useState<string>("");
+
+  const today = useMemo(() => new Date().toISOString().split("T")[0], []);
 
   const [sortField, sortDir] = sortKey.split("_") as [string, "asc" | "desc"];
 

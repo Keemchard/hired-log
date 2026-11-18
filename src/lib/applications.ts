@@ -4,7 +4,6 @@ import {
   updateDoc,
   deleteDoc,
   doc,
-  getDoc,
   getDocs,
   query,
   orderBy,
@@ -57,27 +56,26 @@ export async function updateApplication(
   extraValidStatuses: string[] = []
 ): Promise<void> {
   const docRef = doc(db, COLLECTION_NAME, id);
-
-  const docSnap = await getDoc(docRef);
-  if (!docSnap.exists() || docSnap.data().userId !== userId) {
-    throw new Error("Unauthorized");
-  }
-
   const { interviews, timeline, ...rest } = data as Record<string, unknown>;
 
-  const sanitized = sanitizeApplicationData(
-    {
-      ...docSnap.data(),
-      ...rest,
-    } as Record<string, unknown>,
-    extraValidStatuses
-  );
-
   const updatePayload: Record<string, unknown> = {
-    ...sanitized,
-    userId,
     updatedAt: new Date().toISOString(),
   };
+
+  const hasAllRequired =
+    rest.company && rest.position && rest.location && rest.dateApplied;
+
+  if (hasAllRequired) {
+    const sanitized = sanitizeApplicationData(rest, extraValidStatuses);
+    Object.assign(updatePayload, sanitized, { userId });
+  } else {
+    if (rest.status !== undefined) {
+      if (!extraValidStatuses.includes(rest.status as string)) {
+        throw new Error(`Invalid status: ${rest.status}`);
+      }
+      updatePayload.status = rest.status;
+    }
+  }
 
   if (interviews !== undefined) updatePayload.interviews = interviews;
   if (timeline !== undefined) updatePayload.timeline = timeline;
@@ -87,14 +85,7 @@ export async function updateApplication(
 
 export async function deleteApplication(
   id: string,
-  userId: string
+  _userId: string
 ): Promise<void> {
-  const docRef = doc(db, COLLECTION_NAME, id);
-
-  const docSnap = await getDoc(docRef);
-  if (!docSnap.exists() || docSnap.data().userId !== userId) {
-    throw new Error("Unauthorized");
-  }
-
-  await deleteDoc(docRef);
+  await deleteDoc(doc(db, COLLECTION_NAME, id));
 }

@@ -26,7 +26,7 @@ interface ApplicationModalProps {
   onClose: () => void;
   onSubmit: (
     data: Omit<JobApplication, "id" | "userId" | "createdAt" | "updatedAt">
-  ) => void;
+  ) => Promise<void>;
   initialData?: JobApplication | null;
   statuses?: CustomStatus[];
   onManageStatuses?: () => void;
@@ -92,9 +92,10 @@ export default function ApplicationModal({
       });
       setInterviews(initialData.interviews || []);
     } else {
-      setForm(defaultFormState);
+      setForm({ ...defaultFormState, dateApplied: new Date().toISOString().split("T")[0] });
       setInterviews([]);
     }
+    setSubmitting(false);
     setAiText("");
     setAiImage(null);
     setAiError("");
@@ -145,6 +146,8 @@ export default function ApplicationModal({
     try {
       await onSubmit({ ...form, interviews } as Omit<JobApplication, "id" | "userId" | "createdAt" | "updatedAt">);
       onClose();
+    } catch {
+      // Error toasts are handled by the parent callbacks
     } finally {
       setSubmitting(false);
     }
